@@ -35,25 +35,24 @@ router.put(
 );
 
 router.delete(
-  '/taskId',
+  '/:taskId',
   param('boardId').custom((value) => {
     if (!validation.isObjectId(value)) {
       return Promise.reject('invalid board id');
     } else return Promise.resolve();
   }),
-  param('boardId').custom((value) => {
+  param('taskId').custom((value) => {
     if (!validation.isObjectId(value)) {
-      return Promise.reject('invalid board id');
+      return Promise.reject('invalid task id');
     } else return Promise.resolve();
   }),
-
   validation.validate,
   tokenHandler.verifyToken,
   taskController.delete
 );
 
 router.put(
-  '/taskId',
+  '/:taskId',
   param('boardId').custom((value) => {
     if (!validation.isObjectId(value)) {
       return Promise.reject('invalid board id');

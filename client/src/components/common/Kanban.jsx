@@ -13,7 +13,7 @@ import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import sectionApi from '../../api/sectionApi';
 import taskApi from '../../api/taskApi';
-
+import TaskModal from './TaskModal';
 let timer;
 const timeout = 500;
 
@@ -253,13 +253,13 @@ const Kanban = (props) => {
           ))}
         </Box>
       </DragDropContext>
-      {/* <TaskModal
-  task={selectedTask}
-  boardId={boardId}
-  onClose={() => setSelectedTask(undefined)}
-  onUpdate={onUpdateTask}
-  onDelete={onDeleteTask}
-  /> */}
+      <TaskModal
+        task={selectedTask}
+        boardId={boardId}
+        onClose={() => setSelectedTask(undefined)}
+        onUpdate={onUpdateTask}
+        onDelete={onDeleteTask}
+      />
     </>
   );
 };
