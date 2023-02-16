@@ -16,6 +16,7 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import taskApi from './../../api/taskApi';
 
 import '../../css/custom-editor.css';
+import Loader from './Loader';
 
 let timer;
 const timeout = 500;
@@ -40,7 +41,7 @@ const TaskModal = (props) => {
   const [task, setTask] = useState(props.task);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     setTask(props.task);
     setTitle(props.task !== undefined ? props.task.title : '');
@@ -59,9 +60,11 @@ const TaskModal = (props) => {
 
   const deleteTask = async () => {
     try {
+      setLoading(true);
       await taskApi.delete(boardID, task._id);
       props.onDelete(task);
       setTask(undefined);
+      setLoading(false);
     } catch (error) {
       alert(error);
     }
@@ -119,7 +122,7 @@ const TaskModal = (props) => {
             }}
           >
             <IconButton variant='outlined' color='error' onClick={deleteTask}>
-              <DeleteOutlinedIcon />
+              {loading ? <Loader /> : <DeleteOutlinedIcon />}
             </IconButton>
           </Box>
           <Box

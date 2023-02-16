@@ -1,20 +1,15 @@
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import StarBorderOutlinedIcon from '@mui/icons-material/StarBorderOutlined';
 import StarOutlinedIcon from '@mui/icons-material/StarOutlined';
-import {
-  Box,
-  Button,
-  Divider,
-  IconButton,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, IconButton, TextField } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import boardApi from '../api/boardApi';
 import EmojiPicker from '../components/common/EmojiPicker';
 import Kanban from '../components/common/Kanban';
+import Loader from '../components/common/Loader';
+import LoadingText from '../components/common/LoadingText';
 import { setBoards } from '../redux/features/boardSlice';
 import { setFavouriteList } from '../redux/features/favouriteSlice';
 
@@ -31,18 +26,23 @@ const Board = () => {
   const [isFavourite, setIsFavourite] = useState(false);
   const [icon, setIcon] = useState('');
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const boards = useSelector((state) => state.board.value);
   const favouriteList = useSelector((state) => state.favourites.value);
+  const [isLoadingComponent, setIsLoadingComponent] = useState(true);
 
   useEffect(() => {
     const getBoard = async () => {
       try {
         const res = await boardApi.getOne(boardId);
+
         setTitle(res.title);
         setDescription(res.description);
         setSections(res.sections);
         setIsFavourite(res.favourite);
         setIcon(res.icon);
+        setIsLoadingComponent(false);
       } catch (err) {
         alert(err);
         console.log(err);
@@ -76,6 +76,7 @@ const Board = () => {
 
   const updateTitle = async (e) => {
     clearTimeout(timer);
+
     const newTitle = e.target.value;
     setTitle(newTitle);
     let temp = [...boards];
@@ -98,6 +99,7 @@ const Board = () => {
         await boardApi.update(boardId, { title: newTitle });
       } catch (err) {
         alert(err);
+      } finally {
       }
     });
   };
@@ -132,6 +134,7 @@ const Board = () => {
 
   const deleteBoard = async () => {
     try {
+      setIsLoading(true);
       await boardApi.delete(boardId);
       if (isFavourite) {
         const newFavouriteList = favouriteList.filter((e) => e._id !== boardId);
@@ -139,6 +142,7 @@ const Board = () => {
       }
 
       const newList = boards.filter((e) => e._id !== boardId);
+      setIsLoading(false);
       if (newList.length === 0) {
         navigate('/boards');
       } else {
@@ -167,17 +171,25 @@ const Board = () => {
             <StarBorderOutlinedIcon />
           )}
         </IconButton>
-        <IconButton variant='outlined' color='error' onClick={deleteBoard}>
-          <DeleteOutlinedIcon />
+        <IconButton variant='outlined' color='error'>
+          {isLoading ? (
+            <Loader />
+          ) : (
+            <DeleteOutlinedIcon onClick={deleteBoard} />
+          )}
         </IconButton>
       </Box>
 
       <Box sx={{ padding: '10px 50px' }}>
         <Box>
           {/* emoji picker */}
-          <EmojiPicker icon={icon} onChange={onIconChange} />
+          {isLoadingComponent ? (
+            <div style={{ fontSize: '46px' }}>📃</div>
+          ) : (
+            <EmojiPicker onChange={onIconChange} icon={icon} />
+          )}
           <TextField
-            value={title}
+            value={isLoadingComponent ? 'Loading...' : title}
             placeholder='Untitled'
             onChange={updateTitle}
             variant='outlined'

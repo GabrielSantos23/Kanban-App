@@ -14,14 +14,29 @@ import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import sectionApi from '../../api/sectionApi';
 import taskApi from '../../api/taskApi';
 import TaskModal from './TaskModal';
+import LoadingText from './LoadingText';
+import Loader from './Loader';
+import styled from 'styled-components';
+
 let timer;
 const timeout = 500;
+
+const Container = styled(Box)`
+  display: flex;
+  align-items: flex-start;
+  width: calc(100vw - 400px);
+  overflow-x: auto;
+
+  @media (max-width: 1200px) {
+    width: calc(100vw - 200px);
+  }
+`;
 
 const Kanban = (props) => {
   const boardId = props.boardId;
   const [data, setData] = useState([]);
   const [selectedTask, setSelectedTask] = useState(undefined);
-
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     setData(props.data);
   }, [props.data]);
@@ -67,8 +82,10 @@ const Kanban = (props) => {
 
   const createSection = async () => {
     try {
+      setLoading(true);
       const section = await sectionApi.create(boardId);
       setData([...data, section]);
+      setLoading(false);
     } catch (err) {
       alert(err);
     }
@@ -76,14 +93,22 @@ const Kanban = (props) => {
 
   const deleteSection = async (sectionId) => {
     try {
+      const updatedData = [...data].map((section) => {
+        if (section._id === sectionId) {
+          return { ...section, isLoading: true };
+        }
+        return section;
+      });
+      setData(updatedData);
+
       await sectionApi.delete(boardId, sectionId);
-      const newData = [...data].filter((e) => e._id !== sectionId);
+
+      const newData = updatedData.filter((e) => e._id !== sectionId);
       setData(newData);
     } catch (err) {
       alert(err);
     }
   };
-
   const updateSectionTitle = async (e, sectionId) => {
     clearTimeout(timer);
     const newTitle = e.target.value;
@@ -102,10 +127,27 @@ const Kanban = (props) => {
 
   const createTask = async (sectionId) => {
     try {
+      const updatedData = [...data].map((section) => {
+        if (section._id === sectionId) {
+          return { ...section, isLoadingTask: true };
+        }
+        return section;
+      });
+      setData(updatedData);
+
       const task = await taskApi.create(boardId, { sectionId });
-      const newData = [...data];
-      const index = newData.findIndex((e) => e._id === sectionId);
-      newData[index].tasks.unshift(task);
+
+      const newData = updatedData.map((section) => {
+        if (section._id === sectionId) {
+          return {
+            ...section,
+            tasks: [task, ...section.tasks],
+            isLoadingTask: false,
+          };
+        }
+        return section;
+      });
+
       setData(newData);
     } catch (err) {
       alert(err);
@@ -141,21 +183,16 @@ const Kanban = (props) => {
           justifyContent: 'space-between',
         }}
       >
-        <Button onClick={createSection}>Add section</Button>
+        <Button onClick={createSection}>
+          {loading ? <LoadingText /> : 'Add section'}
+        </Button>
         <Typography variant='body2' fontWeight='700'>
           {data.length} Sections
         </Typography>
       </Box>
       <Divider sx={{ margin: '10px 0' }} />
       <DragDropContext onDragEnd={onDragEnd}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            width: 'calc(100vw - 400px)',
-            overflowX: 'auto',
-          }}
-        >
+        <Container>
           {data.map((section) => (
             <div key={section._id} style={{ width: '300px' }}>
               <Droppable key={section._id} droppableId={section._id}>
@@ -194,28 +231,40 @@ const Kanban = (props) => {
                           },
                         }}
                       />
-                      <IconButton
-                        variant='outlined'
-                        size='small'
-                        sx={{
-                          color: 'gray',
-                          '&:hover': { color: 'green' },
-                        }}
-                        onClick={() => createTask(section._id)}
-                      >
-                        <AddOutlinedIcon />
-                      </IconButton>
-                      <IconButton
-                        variant='outlined'
-                        size='small'
-                        sx={{
-                          color: 'gray',
-                          '&:hover': { color: 'red' },
-                        }}
-                        onClick={() => deleteSection(section._id)}
-                      >
-                        <DeleteOutlinedIcon />
-                      </IconButton>
+                      {section.isLoadingTask ? (
+                        <div style={{ paddingTop: '5px' }}>
+                          <Loader />
+                        </div>
+                      ) : (
+                        <IconButton
+                          variant='outlined'
+                          size='small'
+                          sx={{
+                            color: 'gray',
+                            '&:hover': { color: 'green' },
+                          }}
+                          onClick={() => createTask(section._id)}
+                        >
+                          <AddOutlinedIcon />
+                        </IconButton>
+                      )}
+                      {section.isLoading ? (
+                        <div style={{ paddingTop: '5px' }}>
+                          <Loader />
+                        </div>
+                      ) : (
+                        <IconButton
+                          variant='outlined'
+                          size='small'
+                          sx={{
+                            color: 'gray',
+                            '&:hover': { color: 'red' },
+                          }}
+                          onClick={() => deleteSection(section._id)}
+                        >
+                          <DeleteOutlinedIcon />
+                        </IconButton>
+                      )}
                     </Box>
                     {/* tasks */}
                     {section.tasks.map((task, index) => (
@@ -251,7 +300,7 @@ const Kanban = (props) => {
               </Droppable>
             </div>
           ))}
-        </Box>
+        </Container>
       </DragDropContext>
       <TaskModal
         task={selectedTask}

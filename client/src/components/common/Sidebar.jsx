@@ -19,6 +19,9 @@ import boardApi from './../../api/boardApi';
 import { setBoards } from '../../redux/features/boardSlice';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import FavouriteList from './FavouriteList';
+import Loading from './Loading';
+import ReactLoading from 'react-loading';
+import Loader from './Loader';
 
 const Sidebar = () => {
   const user = useSelector((state) => state.user.value);
@@ -28,12 +31,15 @@ const Sidebar = () => {
   const boards = useSelector((state) => state.board.value);
   const { boardId } = useParams();
   const [activeIndex, setActiveIndex] = useState(0);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingSidebar, setIsLoadingSidebar] = useState(false);
   useEffect(() => {
     const getBoards = async () => {
       try {
+        setIsLoadingSidebar(true);
         const res = await boardApi.getAll();
         dispatch(setBoards(res));
+        setIsLoadingSidebar(false);
       } catch (err) {
         alert(err);
       }
@@ -52,7 +58,7 @@ const Sidebar = () => {
   const matches = useMediaQuery('(max-width: 1200px)');
   const [open, setOpen] = React.useState(!matches);
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.clear();
     navigate('/login');
   };
 
@@ -74,9 +80,11 @@ const Sidebar = () => {
 
   const addBoard = async () => {
     try {
+      setIsLoading(true);
       const res = await boardApi.create();
       const newList = [res, ...boards];
       dispatch(setBoards(newList));
+      setIsLoading(false);
     } catch (error) {
       alert(error);
     }
@@ -84,123 +92,141 @@ const Sidebar = () => {
 
   return (
     <>
-      {matches && (
-        <IconButton
-          sx={{
-            borderRadius: 0,
-            height: '100%',
-          }}
-          onClick={() => setOpen(true)}
-        >
-          <Typography variant='body2'>
-            <MenuIcon />
-          </Typography>
-        </IconButton>
-      )}
-      <Drawer
-        open={open}
-        onClose={() => setOpen(false)}
-        variant={matches ? 'temporary' : 'permanent'}
-        sx={{
-          width: sidebarWidth,
-        }}
-      >
-        <List
-          disablePadding
-          sx={{
+      {isLoadingSidebar ? (
+        <div
+          style={{
+            height: '100vh',
+            backgroundColor: '#292929',
             width: sidebarWidth,
-            height: '100%',
-            backgroundColor: assets.color.secondary,
           }}
         >
-          <ListItem>
-            <Box
+          <Loading />
+        </div>
+      ) : (
+        <div>
+          {matches && (
+            <IconButton
               sx={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
+                borderRadius: 0,
+                height: '100%',
+              }}
+              onClick={() => setOpen(true)}
+            >
+              <Typography variant='body2'>
+                <MenuIcon />
+              </Typography>
+            </IconButton>
+          )}
+          <Drawer
+            open={open}
+            onClose={() => setOpen(false)}
+            variant={matches ? 'temporary' : 'permanent'}
+            sx={{
+              width: sidebarWidth,
+            }}
+          >
+            <List
+              disablePadding
+              sx={{
+                width: sidebarWidth,
+                height: '100%',
+                backgroundColor: assets.color.secondary,
               }}
             >
-              <Typography variant='body2' fontWeight='700'>
-                {user.username}
-              </Typography>
-              <IconButton onClick={logout}>
-                <LogoutOutlinedIcon fontSize='small' />
-              </IconButton>
-            </Box>
-          </ListItem>
-          <Box sx={{ paddingTop: '10px' }} />
-          <FavouriteList />
+              <ListItem>
+                <Box
+                  sx={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Typography variant='body2' fontWeight='700'>
+                    {user.username}
+                  </Typography>
+                  <IconButton onClick={logout}>
+                    <LogoutOutlinedIcon fontSize='small' />
+                  </IconButton>
+                </Box>
+              </ListItem>
+              <Box sx={{ paddingTop: '10px' }} />
+              <FavouriteList />
 
-          <Box sx={{ paddingTop: '10px' }} />
-          <ListItem>
-            <Box
-              sx={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <Typography variant='body2' fontWeight='700'>
-                Private
-              </Typography>
-              <IconButton onClick={addBoard}>
-                <AddBoxOutlinedIcon fontSize='small' />
-              </IconButton>
-            </Box>
-          </ListItem>
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable
-              key={'list-board-droppable'}
-              droppableId={'list-board-droppable'}
-            >
-              {(provided) => (
-                <div ref={provided.innerRef} {...provided.droppableProps}>
-                  {boards.map((item, index) => (
-                    <Draggable
-                      key={item._id}
-                      draggableId={item._id}
-                      index={index}
-                    >
-                      {(provided, snapshot) => (
-                        <ListItemButton
-                          ref={provided.innerRef}
-                          {...provided.dragHandleProps}
-                          {...provided.draggableProps}
-                          selected={index === activeIndex}
-                          component={Link}
-                          to={`/boards/${item._id}`}
-                          sx={{
-                            pl: '20px',
-                            cursor: snapshot.isDragging
-                              ? 'grab'
-                              : 'pointer!important',
-                          }}
+              <Box sx={{ paddingTop: '10px' }} />
+              <ListItem>
+                <Box
+                  sx={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Typography variant='body2' fontWeight='700'>
+                    Private
+                  </Typography>
+                  <IconButton>
+                    {isLoading ? (
+                      <Loader />
+                    ) : (
+                      <AddBoxOutlinedIcon onClick={addBoard} fontSize='small' />
+                    )}
+                  </IconButton>
+                </Box>
+              </ListItem>
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable
+                  key={'list-board-droppable'}
+                  droppableId={'list-board-droppable'}
+                >
+                  {(provided) => (
+                    <div ref={provided.innerRef} {...provided.droppableProps}>
+                      {boards.map((item, index) => (
+                        <Draggable
+                          key={item._id}
+                          draggableId={item._id}
+                          index={index}
                         >
-                          <Typography
-                            variant='body2'
-                            fontWeight='700'
-                            sx={{
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            {item.icon} {item.title}
-                          </Typography>
-                        </ListItemButton>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </List>
-      </Drawer>
+                          {(provided, snapshot) => (
+                            <ListItemButton
+                              ref={provided.innerRef}
+                              {...provided.dragHandleProps}
+                              {...provided.draggableProps}
+                              selected={index === activeIndex}
+                              component={Link}
+                              to={`/boards/${item._id}`}
+                              sx={{
+                                pl: '20px',
+                                cursor: snapshot.isDragging
+                                  ? 'grab'
+                                  : 'pointer!important',
+                              }}
+                            >
+                              <Typography
+                                variant='body2'
+                                fontWeight='700'
+                                sx={{
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                }}
+                              >
+                                {item.icon} {item.title}
+                              </Typography>
+                            </ListItemButton>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+            </List>
+          </Drawer>
+        </div>
+      )}
     </>
   );
 };
