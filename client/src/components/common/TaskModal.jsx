@@ -66,7 +66,7 @@ const TaskModal = (props) => {
       setTask(undefined);
       setLoading(false);
     } catch (error) {
-      alert(error);
+      console.log(error);
     }
   };
 
@@ -77,7 +77,7 @@ const TaskModal = (props) => {
       try {
         await taskApi.update(boardID, task._id, { title: newTitle });
       } catch (error) {
-        alert(error);
+        console.log(error);
       }
     }, timeout);
     task.title = newTitle;
@@ -94,7 +94,7 @@ const TaskModal = (props) => {
         try {
           await taskApi.update(boardID, task._id, { content: data });
         } catch (error) {
-          alert(error);
+          console.log(error);
         }
       }, timeout);
       task.content = data;

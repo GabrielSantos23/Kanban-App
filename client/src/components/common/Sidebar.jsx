@@ -41,7 +41,7 @@ const Sidebar = () => {
         dispatch(setBoards(res));
         setIsLoadingSidebar(false);
       } catch (err) {
-        alert(err);
+        console.log(err);
       }
     };
     getBoards();
@@ -74,7 +74,7 @@ const Sidebar = () => {
     try {
       await boardApi.updatePosition({ boards: newList });
     } catch (err) {
-      alert(err);
+      console.log(err);
     }
   };
 
@@ -86,7 +86,7 @@ const Sidebar = () => {
       dispatch(setBoards(newList));
       setIsLoading(false);
     } catch (error) {
-      alert(error);
+      console.log(error);
     }
   };
 

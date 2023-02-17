@@ -76,7 +76,7 @@ const Kanban = (props) => {
       });
       setData(data);
     } catch (err) {
-      alert(err);
+      console.log(err);
     }
   };
 
@@ -87,7 +87,7 @@ const Kanban = (props) => {
       setData([...data, section]);
       setLoading(false);
     } catch (err) {
-      alert(err);
+      console.log(err);
     }
   };
 
@@ -106,7 +106,7 @@ const Kanban = (props) => {
       const newData = updatedData.filter((e) => e._id !== sectionId);
       setData(newData);
     } catch (err) {
-      alert(err);
+      console.log(err);
     }
   };
   const updateSectionTitle = async (e, sectionId) => {
@@ -120,7 +120,7 @@ const Kanban = (props) => {
       try {
         await sectionApi.update(boardId, sectionId, { title: newTitle });
       } catch (err) {
-        alert(err);
+        console.log(err);
       }
     }, timeout);
   };
@@ -150,7 +150,7 @@ const Kanban = (props) => {
 
       setData(newData);
     } catch (err) {
-      alert(err);
+      console.log(err);
     }
   };
 

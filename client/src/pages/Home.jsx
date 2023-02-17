@@ -19,7 +19,7 @@ const Home = () => {
       dispatch(setBoards([res]));
       navigate(`/boards/${res._id}`);
     } catch (err) {
-      alert(err);
+      console.log(err);
     } finally {
       setLoading(false);
     }
